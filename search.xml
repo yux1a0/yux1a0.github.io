@@ -38,4 +38,56 @@
         <tag>python</tag>
       </tags>
   </entry>
+  <entry>
+    <title>【fastapi+sqlalchemy】一些总结和沉淀</title>
+    <url>/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/</url>
+    <content><![CDATA[<p>最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法</p>
+<span id="more"></span>
+
+<h1 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h1><blockquote>
+<p><a href="https://fastapi.tiangolo.com/zh/tutorial/dependencies/">https://fastapi.tiangolo.com/zh/tutorial/dependencies/</a></p>
+</blockquote>
+<p>fastapi对接口提供了依赖注入的功能，方便进行代码复用和统一的身份验证等</p>
+<p>官方解释的依赖注入的作用:</p>
+<blockquote>
+<p>编程中的「依赖注入」是声明代码（本文中为路径操作函数 ）运行所需的，或要使用的「依赖」的一种方式。</p>
+<p>然后，由系统（本文中为 FastAPI）负责执行任意需要的逻辑，为代码提供这些依赖（「注入」依赖项）。</p>
+<p>依赖注入常用于以下场景：</p>
+<ul>
+<li>共享业务逻辑（复用相同的代码逻辑）</li>
+<li>共享数据库连接</li>
+<li>实现安全、验证、角色权限</li>
+<li>等……</li>
+</ul>
+<p>上述场景均可以使用依赖注入，将代码重复最小化。</p>
+</blockquote>
+<p>官方文档写了很多具体的用法，这里仅介绍一下我自己用的一些特性。</p>
+<h2 id="对子路由整体进行鉴权"><a href="#对子路由整体进行鉴权" class="headerlink" title="对子路由整体进行鉴权"></a>对子路由整体进行鉴权</h2><p>fastapi提供了APIRouter类来进行子路由的配置，同时，支持在配置子路由时配置依赖注入，使得所有该子路由下的接口可以统一配置鉴权，这样省去了每个接口单独鉴权的麻烦。</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">admin_verify_ticket</span>(<span class="params">request: Request</span>):</span></span><br><span class="line">    <span class="keyword">if</span> request.session.get(<span class="string">&quot;user&quot;</span>, <span class="literal">None</span>):</span><br><span class="line">        <span class="keyword">return</span> request.session.get(<span class="string">&quot;user&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">raise</span> HTTPException(detail=<span class="string">&quot;用户未认证，需要跳转登陆&quot;</span>, status_code=<span class="number">401</span>)</span><br><span class="line"></span><br><span class="line">router = APIRouter(prefix=<span class="string">&#x27;/test&#x27;</span>, dependencies=[Depends(admin_verify_ticket)])</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，配置在路径操作和子路由上的依赖注入函数并不会把返回值传递给API接口，但是可以正常的抛出异常</p>
+<h2 id="对通用参数输入进行处理"><a href="#对通用参数输入进行处理" class="headerlink" title="对通用参数输入进行处理"></a>对通用参数输入进行处理</h2><p>通过使用类作为依赖注入，可以方便的对通用的一些参数进行处理，比如列表页的排序、分页等参数</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> FastAPI</span><br><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> Depends, Query</span><br><span class="line"></span><br><span class="line">app = FastAPI()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CommonQueryParams</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, q: <span class="built_in">int</span> = Query(<span class="params">..., ge=<span class="number">1</span>, le=<span class="number">4</span></span>)</span>):</span></span><br><span class="line">        self.q = q</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.get(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">index</span>(<span class="params">params: CommonQueryParams = Depends(<span class="params"></span>)</span>):</span></span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;q&quot;</span>: params.q&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="sqlalchemy事务和锁"><a href="#sqlalchemy事务和锁" class="headerlink" title="sqlalchemy事务和锁"></a>sqlalchemy事务和锁</h1><p>注意：这里写的使用事务和锁的方法前提是在初始化数据库引擎的时候不要设置<code>AUTOCOMMIT</code></p>
+<h2 id="通过session上下文来方便的管理事务"><a href="#通过session上下文来方便的管理事务" class="headerlink" title="通过session上下文来方便的管理事务"></a>通过session上下文来方便的管理事务</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br><span class="line">    <span class="keyword">if</span> r.rowcount == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt2)</span><br><span class="line">    <span class="keyword">if</span> r.rowcount == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<p>通过上下文的方式可以很方便的使用事务：当<code>update_stmt2</code>操作出错或结果不符合预期时，直接return即可以自动回滚事务，无需考虑session的注销以及<code>update_stmt</code>的操作回滚的问题。</p>
+<h2 id="使用with-for-update-设置查询锁"><a href="#使用with-for-update-设置查询锁" class="headerlink" title="使用with_for_update()设置查询锁"></a>使用<code>with_for_update()</code>设置查询锁</h2><p>非常深奥的mysql锁的内容这里不涉及，只是简单记录一下在sqlalchemy使用<code>FOR UPDATE</code>语句的方法。</p>
+<p>同样是在一个session的上下文中，在query中加上<code>with_for_update()</code>会对查询的行（或者表，取决于查询的where条件中是否有主键）加锁，只有同一session的修改和查询可以执行，其他修改和查询操作会delay直到锁被释放。</p>
+<p>一个小例子：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    query = query.with_for_update()</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(query)</span><br><span class="line">    </span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br></pre></td></tr></table></figure>
+
+<p>用这种方式可以缓解因为高并发带来的条件竞争问题</p>
+]]></content>
+      <categories>
+        <category>code</category>
+      </categories>
+      <tags>
+        <tag>code</tag>
+        <tag>python</tag>
+        <tag>fastapi</tag>
+        <tag>sqlalchemy</tag>
+      </tags>
+  </entry>
 </search>

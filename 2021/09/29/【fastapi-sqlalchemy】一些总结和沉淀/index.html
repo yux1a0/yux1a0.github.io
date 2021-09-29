@@ -21,21 +21,23 @@
     var CONFIG = {"hostname":"yux1a0.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="并发场景下实现基于令牌桶算法的QPS限流，适合需要精确控制爬虫速率的场景">
+  <meta name="description" content="最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【Python】并发场景下的令牌桶限流">
-<meta property="og:url" content="http://yux1a0.github.io/2021/08/23/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/index.html">
+<meta property="og:title" content="【fastapi+sqlalchemy】一些总结和沉淀">
+<meta property="og:url" content="http://yux1a0.github.io/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/index.html">
 <meta property="og:site_name" content="yux1a0&#39;s blog">
-<meta property="og:description" content="并发场景下实现基于令牌桶算法的QPS限流，适合需要精确控制爬虫速率的场景">
+<meta property="og:description" content="最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2021-08-23T03:50:22.000Z">
-<meta property="article:modified_time" content="2021-08-23T03:58:33.094Z">
+<meta property="article:published_time" content="2021-09-29T02:39:40.000Z">
+<meta property="article:modified_time" content="2021-09-29T03:41:01.406Z">
 <meta property="article:author" content="yux1a0">
 <meta property="article:tag" content="code">
 <meta property="article:tag" content="python">
+<meta property="article:tag" content="fastapi">
+<meta property="article:tag" content="sqlalchemy">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://yux1a0.github.io/2021/08/23/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/">
+<link rel="canonical" href="http://yux1a0.github.io/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/">
 
 
 <script id="page-configurations">
@@ -48,7 +50,7 @@
   };
 </script>
 
-  <title>【Python】并发场景下的令牌桶限流 | yux1a0's blog</title>
+  <title>【fastapi+sqlalchemy】一些总结和沉淀 | yux1a0's blog</title>
   
 
 
@@ -195,7 +197,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yux1a0.github.io/2021/08/23/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/">
+    <link itemprop="mainEntityOfPage" href="http://yux1a0.github.io/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/%E5%A4%B4%E5%83%8F.jpeg">
@@ -208,7 +210,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          【Python】并发场景下的令牌桶限流
+          【fastapi+sqlalchemy】一些总结和沉淀
         </h1>
 
         <div class="post-meta">
@@ -219,7 +221,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2021-08-23 11:50:22 / 修改时间：11:58:33" itemprop="dateCreated datePublished" datetime="2021-08-23T11:50:22+08:00">2021-08-23</time>
+              <time title="创建时间：2021-09-29 10:39:40 / 修改时间：11:41:01" itemprop="dateCreated datePublished" datetime="2021-09-29T10:39:40+08:00">2021-09-29</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -242,14 +244,44 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>并发场景下实现基于令牌桶算法的QPS限流，适合需要精确控制爬虫速率的场景</p>
+        <p>最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法</p>
 <span id="more"></span>
 
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#!/usr/bin/env python</span></span><br><span class="line"><span class="comment"># -*- encoding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">from</span> functools <span class="keyword">import</span> wraps</span><br><span class="line"><span class="keyword">from</span> threading <span class="keyword">import</span> RLock</span><br><span class="line"><span class="keyword">from</span> time <span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">from</span> gevent.pool <span class="keyword">import</span> Pool</span><br><span class="line"><span class="keyword">from</span> gevent <span class="keyword">import</span> monkey</span><br><span class="line">monkey.patch_all()</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TokenBucket</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, cap: <span class="built_in">int</span>, rate: <span class="built_in">int</span></span>) -&gt; <span class="literal">None</span>:</span></span><br><span class="line">        self._cap = <span class="built_in">float</span>(cap)</span><br><span class="line">        self._tokens = self._cap</span><br><span class="line">        self._rate = <span class="built_in">float</span>(rate)</span><br><span class="line">        self._last_time = time()</span><br><span class="line">        self._lock = RLock()</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__get_cur_tokens</span>(<span class="params">self</span>):</span></span><br><span class="line">        <span class="keyword">with</span> self._lock:</span><br><span class="line">            <span class="keyword">if</span> self._tokens &lt; self._cap:</span><br><span class="line">                now = time()</span><br><span class="line">                delta = self._rate * (now - self._last_time)</span><br><span class="line">                self._tokens = <span class="built_in">min</span>(self._cap, self._tokens + delta)</span><br><span class="line">                self._last_time = now</span><br><span class="line">            <span class="keyword">return</span> self._tokens</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__consume</span>(<span class="params">self, tokens: <span class="built_in">int</span></span>):</span></span><br><span class="line">        <span class="keyword">with</span> self._lock:</span><br><span class="line">            <span class="keyword">if</span> tokens &lt;= self.__get_cur_tokens():</span><br><span class="line">                self._tokens -= tokens</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">limit</span>(<span class="params">self, func</span>):</span></span><br><span class="line"><span class="meta">        @wraps(<span class="params">func</span>)</span></span><br><span class="line">        <span class="function"><span class="keyword">def</span> <span class="title">with_limit</span>(<span class="params">*args, **kwargs</span>):</span></span><br><span class="line">            <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">                <span class="keyword">if</span> self.__consume(tokens=<span class="number">1</span>):</span><br><span class="line">                    <span class="keyword">return</span> func(*args, **kwargs)</span><br><span class="line">        <span class="keyword">return</span> with_limit</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">token_bucket = TokenBucket(cap=<span class="number">5</span>, rate=<span class="number">5</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">@token_bucket.limit</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">task</span>(<span class="params">url</span>):</span></span><br><span class="line">    <span class="built_in">print</span>(time(), url)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    pool = Pool(size=<span class="number">8</span>)</span><br><span class="line">    url_list = [<span class="string">&quot;http://www.baidu.com&quot;</span>] * <span class="number">50</span></span><br><span class="line">    pool.<span class="built_in">map</span>(task, url_list)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>参考： <a target="_blank" rel="noopener" href="https://github.com/titan-web/rate-limit/blob/master/token_bucket/__init__.py">https://github.com/titan-web/rate-limit/blob/master/token_bucket/__init__.py</a></p>
+<h1 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h1><blockquote>
+<p><a target="_blank" rel="noopener" href="https://fastapi.tiangolo.com/zh/tutorial/dependencies/">https://fastapi.tiangolo.com/zh/tutorial/dependencies/</a></p>
 </blockquote>
+<p>fastapi对接口提供了依赖注入的功能，方便进行代码复用和统一的身份验证等</p>
+<p>官方解释的依赖注入的作用:</p>
+<blockquote>
+<p>编程中的「依赖注入」是声明代码（本文中为路径操作函数 ）运行所需的，或要使用的「依赖」的一种方式。</p>
+<p>然后，由系统（本文中为 FastAPI）负责执行任意需要的逻辑，为代码提供这些依赖（「注入」依赖项）。</p>
+<p>依赖注入常用于以下场景：</p>
+<ul>
+<li>共享业务逻辑（复用相同的代码逻辑）</li>
+<li>共享数据库连接</li>
+<li>实现安全、验证、角色权限</li>
+<li>等……</li>
+</ul>
+<p>上述场景均可以使用依赖注入，将代码重复最小化。</p>
+</blockquote>
+<p>官方文档写了很多具体的用法，这里仅介绍一下我自己用的一些特性。</p>
+<h2 id="对子路由整体进行鉴权"><a href="#对子路由整体进行鉴权" class="headerlink" title="对子路由整体进行鉴权"></a>对子路由整体进行鉴权</h2><p>fastapi提供了APIRouter类来进行子路由的配置，同时，支持在配置子路由时配置依赖注入，使得所有该子路由下的接口可以统一配置鉴权，这样省去了每个接口单独鉴权的麻烦。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">admin_verify_ticket</span>(<span class="params">request: Request</span>):</span></span><br><span class="line">    <span class="keyword">if</span> request.session.get(<span class="string">&quot;user&quot;</span>, <span class="literal">None</span>):</span><br><span class="line">        <span class="keyword">return</span> request.session.get(<span class="string">&quot;user&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">raise</span> HTTPException(detail=<span class="string">&quot;用户未认证，需要跳转登陆&quot;</span>, status_code=<span class="number">401</span>)</span><br><span class="line"></span><br><span class="line">router = APIRouter(prefix=<span class="string">&#x27;/test&#x27;</span>, dependencies=[Depends(admin_verify_ticket)])</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，配置在路径操作和子路由上的依赖注入函数并不会把返回值传递给API接口，但是可以正常的抛出异常</p>
+<h2 id="对通用参数输入进行处理"><a href="#对通用参数输入进行处理" class="headerlink" title="对通用参数输入进行处理"></a>对通用参数输入进行处理</h2><p>通过使用类作为依赖注入，可以方便的对通用的一些参数进行处理，比如列表页的排序、分页等参数</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> FastAPI</span><br><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> Depends, Query</span><br><span class="line"></span><br><span class="line">app = FastAPI()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CommonQueryParams</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, q: <span class="built_in">int</span> = Query(<span class="params">..., ge=<span class="number">1</span>, le=<span class="number">4</span></span>)</span>):</span></span><br><span class="line">        self.q = q</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.get(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">index</span>(<span class="params">params: CommonQueryParams = Depends(<span class="params"></span>)</span>):</span></span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;q&quot;</span>: params.q&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="sqlalchemy事务和锁"><a href="#sqlalchemy事务和锁" class="headerlink" title="sqlalchemy事务和锁"></a>sqlalchemy事务和锁</h1><p>注意：这里写的使用事务和锁的方法前提是在初始化数据库引擎的时候不要设置<code>AUTOCOMMIT</code></p>
+<h2 id="通过session上下文来方便的管理事务"><a href="#通过session上下文来方便的管理事务" class="headerlink" title="通过session上下文来方便的管理事务"></a>通过session上下文来方便的管理事务</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br><span class="line">    <span class="keyword">if</span> r.rowcount == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt2)</span><br><span class="line">    <span class="keyword">if</span> r.rowcount == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br></pre></td></tr></table></figure>
+
+<p>通过上下文的方式可以很方便的使用事务：当<code>update_stmt2</code>操作出错或结果不符合预期时，直接return即可以自动回滚事务，无需考虑session的注销以及<code>update_stmt</code>的操作回滚的问题。</p>
+<h2 id="使用with-for-update-设置查询锁"><a href="#使用with-for-update-设置查询锁" class="headerlink" title="使用with_for_update()设置查询锁"></a>使用<code>with_for_update()</code>设置查询锁</h2><p>非常深奥的mysql锁的内容这里不涉及，只是简单记录一下在sqlalchemy使用<code>FOR UPDATE</code>语句的方法。</p>
+<p>同样是在一个session的上下文中，在query中加上<code>with_for_update()</code>会对查询的行（或者表，取决于查询的where条件中是否有主键）加锁，只有同一session的修改和查询可以执行，其他修改和查询操作会delay直到锁被释放。</p>
+<p>一个小例子：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    query = query.with_for_update()</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(query)</span><br><span class="line">    </span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br></pre></td></tr></table></figure>
+
+<p>用这种方式可以缓解因为高并发带来的条件竞争问题</p>
 
     </div>
 
@@ -262,6 +294,8 @@
           <div class="post-tags">
               <a href="/tags/code/" rel="tag"><i class="fa fa-tag"></i> code</a>
               <a href="/tags/python/" rel="tag"><i class="fa fa-tag"></i> python</a>
+              <a href="/tags/fastapi/" rel="tag"><i class="fa fa-tag"></i> fastapi</a>
+              <a href="/tags/sqlalchemy/" rel="tag"><i class="fa fa-tag"></i> sqlalchemy</a>
           </div>
 
         
@@ -270,13 +304,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2021/07/28/tricks/" rel="prev" title="一些自己总结的tricks">
-      <i class="fa fa-chevron-left"></i> 一些自己总结的tricks
+    <a href="/2021/08/23/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/" rel="prev" title="【Python】并发场景下的令牌桶限流">
+      <i class="fa fa-chevron-left"></i> 【Python】并发场景下的令牌桶限流
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/" rel="next" title="【fastapi+sqlalchemy】一些总结和沉淀">
-      【fastapi+sqlalchemy】一些总结和沉淀 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -335,6 +366,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Depends-%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5"><span class="nav-number">1.</span> <span class="nav-text">Depends - 依赖注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%AD%90%E8%B7%AF%E7%94%B1%E6%95%B4%E4%BD%93%E8%BF%9B%E8%A1%8C%E9%89%B4%E6%9D%83"><span class="nav-number">1.1.</span> <span class="nav-text">对子路由整体进行鉴权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E9%80%9A%E7%94%A8%E5%8F%82%E6%95%B0%E8%BE%93%E5%85%A5%E8%BF%9B%E8%A1%8C%E5%A4%84%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">对通用参数输入进行处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlalchemy%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81"><span class="nav-number">2.</span> <span class="nav-text">sqlalchemy事务和锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87session%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9D%A5%E6%96%B9%E4%BE%BF%E7%9A%84%E7%AE%A1%E7%90%86%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.1.</span> <span class="nav-text">通过session上下文来方便的管理事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8with-for-update-%E8%AE%BE%E7%BD%AE%E6%9F%A5%E8%AF%A2%E9%94%81"><span class="nav-number">2.2.</span> <span class="nav-text">使用with_for_update()设置查询锁</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
