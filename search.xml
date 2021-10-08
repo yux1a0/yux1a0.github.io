@@ -2,7 +2,7 @@
 <search>
   <entry>
     <title>一些自己总结的tricks</title>
-    <url>/2021/07/28/tricks/</url>
+    <url>/tricks/</url>
     <content><![CDATA[<p>一些自己总结的tricks，主要是装环境和代码片段，存档自查用</p>
 <span id="more"></span>
 
@@ -20,7 +20,7 @@
   </entry>
   <entry>
     <title>【Python】并发场景下的令牌桶限流</title>
-    <url>/2021/08/23/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/</url>
+    <url>/%E3%80%90Python%E3%80%91%E5%B9%B6%E5%8F%91%E5%9C%BA%E6%99%AF%E4%B8%8B%E7%9A%84%E4%BB%A4%E7%89%8C%E6%A1%B6%E9%99%90%E6%B5%81/</url>
     <content><![CDATA[<p>并发场景下实现基于令牌桶算法的QPS限流，适合需要精确控制爬虫速率的场景</p>
 <span id="more"></span>
 
@@ -40,7 +40,7 @@
   </entry>
   <entry>
     <title>【fastapi+sqlalchemy】一些总结和沉淀</title>
-    <url>/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/</url>
+    <url>/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/</url>
     <content><![CDATA[<p>最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法</p>
 <span id="more"></span>
 
