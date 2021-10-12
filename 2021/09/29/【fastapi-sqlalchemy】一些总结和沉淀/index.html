@@ -22,15 +22,15 @@
     var CONFIG = {"hostname":"yux1a0.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"flat"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法">
+  <meta name="description" content="最近在用fastapi+sqlalchemy+pymysql构建API服务器，总结一下自己遇到的问题和解决方法">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【fastapi+sqlalchemy】一些总结和沉淀">
+<meta property="og:title" content="【fastapi+sqlalchemy+pymysql】一些总结和沉淀">
 <meta property="og:url" content="http://yux1a0.github.io/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/index.html">
 <meta property="og:site_name" content="yux1a0&#39;s blog">
-<meta property="og:description" content="最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法">
+<meta property="og:description" content="最近在用fastapi+sqlalchemy+pymysql构建API服务器，总结一下自己遇到的问题和解决方法">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2021-09-29T02:39:40.000Z">
-<meta property="article:modified_time" content="2021-09-29T03:41:01.406Z">
+<meta property="article:modified_time" content="2021-10-12T02:51:39.814Z">
 <meta property="article:author" content="yux1a0">
 <meta property="article:tag" content="code">
 <meta property="article:tag" content="python">
@@ -51,7 +51,7 @@
   };
 </script>
 
-  <title>【fastapi+sqlalchemy】一些总结和沉淀 | yux1a0's blog</title>
+  <title>【fastapi+sqlalchemy+pymysql】一些总结和沉淀 | yux1a0's blog</title>
   
 
 
@@ -211,7 +211,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          【fastapi+sqlalchemy】一些总结和沉淀
+          【fastapi+sqlalchemy+pymysql】一些总结和沉淀
         </h1>
 
         <div class="post-meta">
@@ -220,10 +220,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2021-09-29 10:39:40 / 修改时间：11:41:01" itemprop="dateCreated datePublished" datetime="2021-09-29T10:39:40+08:00">2021-09-29</time>
+              <time title="创建时间：2021-09-29 10:39:40" itemprop="dateCreated datePublished" datetime="2021-09-29T10:39:40+08:00">2021-09-29</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-10-12 10:51:39" itemprop="dateModified" datetime="2021-10-12T10:51:39+08:00">2021-10-12</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -245,7 +251,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <p>最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法</p>
+        <p>最近在用fastapi+sqlalchemy+pymysql构建API服务器，总结一下自己遇到的问题和解决方法</p>
 <span id="more"></span>
 
 <h1 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h1><blockquote>
@@ -283,6 +289,10 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    query = query.with_for_update()</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(query)</span><br><span class="line">    </span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br></pre></td></tr></table></figure>
 
 <p>用这种方式可以缓解因为高并发带来的条件竞争问题</p>
+<h1 id="PyMySQL字典游标"><a href="#PyMySQL字典游标" class="headerlink" title="PyMySQL字典游标"></a>PyMySQL字典游标</h1><p>有需求从mysql查询时以字典返回，创建游标对象时加入参数<code>pymysql.cursors.DictCursor</code>来决定获取的每条数据的数据类型为dict</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">import pymysql</span><br><span class="line"></span><br><span class="line">conn = pymysql.connect(host=&#x27;localhost&#x27;, user=&#x27;root&#x27;, password=&#x27;******&#x27;, database=&#x27;test&#x27;)</span><br><span class="line">cur = conn.cursor(pymysql.cursors.DictCursor)</span><br><span class="line">cur.execute(&quot;select * from test;&quot;)</span><br><span class="line">data = cur.fetchall()</span><br><span class="line">print(data)</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：<code>[&#123;&#39;id&#39;: 1, &#39;status&#39;: 1, &#39;sum&#39;: 1&#125;]</code></p>
 
     </div>
 
@@ -367,7 +377,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Depends-%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5"><span class="nav-number">1.</span> <span class="nav-text">Depends - 依赖注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%AD%90%E8%B7%AF%E7%94%B1%E6%95%B4%E4%BD%93%E8%BF%9B%E8%A1%8C%E9%89%B4%E6%9D%83"><span class="nav-number">1.1.</span> <span class="nav-text">对子路由整体进行鉴权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E9%80%9A%E7%94%A8%E5%8F%82%E6%95%B0%E8%BE%93%E5%85%A5%E8%BF%9B%E8%A1%8C%E5%A4%84%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">对通用参数输入进行处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlalchemy%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81"><span class="nav-number">2.</span> <span class="nav-text">sqlalchemy事务和锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87session%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9D%A5%E6%96%B9%E4%BE%BF%E7%9A%84%E7%AE%A1%E7%90%86%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.1.</span> <span class="nav-text">通过session上下文来方便的管理事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8with-for-update-%E8%AE%BE%E7%BD%AE%E6%9F%A5%E8%AF%A2%E9%94%81"><span class="nav-number">2.2.</span> <span class="nav-text">使用with_for_update()设置查询锁</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Depends-%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5"><span class="nav-number">1.</span> <span class="nav-text">Depends - 依赖注入</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E5%AD%90%E8%B7%AF%E7%94%B1%E6%95%B4%E4%BD%93%E8%BF%9B%E8%A1%8C%E9%89%B4%E6%9D%83"><span class="nav-number">1.1.</span> <span class="nav-text">对子路由整体进行鉴权</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%B9%E9%80%9A%E7%94%A8%E5%8F%82%E6%95%B0%E8%BE%93%E5%85%A5%E8%BF%9B%E8%A1%8C%E5%A4%84%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">对通用参数输入进行处理</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#sqlalchemy%E4%BA%8B%E5%8A%A1%E5%92%8C%E9%94%81"><span class="nav-number">2.</span> <span class="nav-text">sqlalchemy事务和锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E8%BF%87session%E4%B8%8A%E4%B8%8B%E6%96%87%E6%9D%A5%E6%96%B9%E4%BE%BF%E7%9A%84%E7%AE%A1%E7%90%86%E4%BA%8B%E5%8A%A1"><span class="nav-number">2.1.</span> <span class="nav-text">通过session上下文来方便的管理事务</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8with-for-update-%E8%AE%BE%E7%BD%AE%E6%9F%A5%E8%AF%A2%E9%94%81"><span class="nav-number">2.2.</span> <span class="nav-text">使用with_for_update()设置查询锁</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PyMySQL%E5%AD%97%E5%85%B8%E6%B8%B8%E6%A0%87"><span class="nav-number">3.</span> <span class="nav-text">PyMySQL字典游标</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 

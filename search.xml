@@ -39,9 +39,9 @@
       </tags>
   </entry>
   <entry>
-    <title>【fastapi+sqlalchemy】一些总结和沉淀</title>
+    <title>【fastapi+sqlalchemy+pymysql】一些总结和沉淀</title>
     <url>/2021/09/29/%E3%80%90fastapi-sqlalchemy%E3%80%91%E4%B8%80%E4%BA%9B%E6%80%BB%E7%BB%93%E5%92%8C%E6%B2%89%E6%B7%80/</url>
-    <content><![CDATA[<p>最近在用fastapi+sqlalchemy构建API服务器，总结一下自己遇到的问题和解决方法</p>
+    <content><![CDATA[<p>最近在用fastapi+sqlalchemy+pymysql构建API服务器，总结一下自己遇到的问题和解决方法</p>
 <span id="more"></span>
 
 <h1 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h1><blockquote>
@@ -79,6 +79,10 @@
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line">session = <span class="keyword">await</span> get_mysql_session()</span><br><span class="line"><span class="keyword">async</span> <span class="keyword">with</span> session.begin():</span><br><span class="line">    query = query.with_for_update()</span><br><span class="line">    r = <span class="keyword">await</span> session.execute(query)</span><br><span class="line">    </span><br><span class="line">    r = <span class="keyword">await</span> session.execute(update_stmt)</span><br></pre></td></tr></table></figure>
 
 <p>用这种方式可以缓解因为高并发带来的条件竞争问题</p>
+<h1 id="PyMySQL字典游标"><a href="#PyMySQL字典游标" class="headerlink" title="PyMySQL字典游标"></a>PyMySQL字典游标</h1><p>有需求从mysql查询时以字典返回，创建游标对象时加入参数<code>pymysql.cursors.DictCursor</code>来决定获取的每条数据的数据类型为dict</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">import pymysql</span><br><span class="line"></span><br><span class="line">conn = pymysql.connect(host=&#x27;localhost&#x27;, user=&#x27;root&#x27;, password=&#x27;******&#x27;, database=&#x27;test&#x27;)</span><br><span class="line">cur = conn.cursor(pymysql.cursors.DictCursor)</span><br><span class="line">cur.execute(&quot;select * from test;&quot;)</span><br><span class="line">data = cur.fetchall()</span><br><span class="line">print(data)</span><br></pre></td></tr></table></figure>
+
+<p>执行结果：<code>[&#123;&#39;id&#39;: 1, &#39;status&#39;: 1, &#39;sum&#39;: 1&#125;]</code></p>
 ]]></content>
       <categories>
         <category>code</category>
