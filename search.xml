@@ -44,7 +44,7 @@
     <content><![CDATA[<p>最近在用fastapi+sqlalchemy+pymysql构建API服务器，总结一下自己遇到的问题和解决方法</p>
 <span id="more"></span>
 
-<h1 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h1><blockquote>
+<h1 id="FastAPI"><a href="#FastAPI" class="headerlink" title="FastAPI"></a>FastAPI</h1><h2 id="Depends-依赖注入"><a href="#Depends-依赖注入" class="headerlink" title="Depends - 依赖注入"></a>Depends - 依赖注入</h2><blockquote>
 <p><a href="https://fastapi.tiangolo.com/zh/tutorial/dependencies/">https://fastapi.tiangolo.com/zh/tutorial/dependencies/</a></p>
 </blockquote>
 <p>fastapi对接口提供了依赖注入的功能，方便进行代码复用和统一的身份验证等</p>
@@ -62,11 +62,11 @@
 <p>上述场景均可以使用依赖注入，将代码重复最小化。</p>
 </blockquote>
 <p>官方文档写了很多具体的用法，这里仅介绍一下我自己用的一些特性。</p>
-<h2 id="对子路由整体进行鉴权"><a href="#对子路由整体进行鉴权" class="headerlink" title="对子路由整体进行鉴权"></a>对子路由整体进行鉴权</h2><p>fastapi提供了APIRouter类来进行子路由的配置，同时，支持在配置子路由时配置依赖注入，使得所有该子路由下的接口可以统一配置鉴权，这样省去了每个接口单独鉴权的麻烦。</p>
+<h3 id="对子路由整体进行鉴权"><a href="#对子路由整体进行鉴权" class="headerlink" title="对子路由整体进行鉴权"></a>对子路由整体进行鉴权</h3><p>fastapi提供了APIRouter类来进行子路由的配置，同时，支持在配置子路由时配置依赖注入，使得所有该子路由下的接口可以统一配置鉴权，这样省去了每个接口单独鉴权的麻烦。</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">admin_verify_ticket</span>(<span class="params">request: Request</span>):</span></span><br><span class="line">    <span class="keyword">if</span> request.session.get(<span class="string">&quot;user&quot;</span>, <span class="literal">None</span>):</span><br><span class="line">        <span class="keyword">return</span> request.session.get(<span class="string">&quot;user&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">raise</span> HTTPException(detail=<span class="string">&quot;用户未认证，需要跳转登陆&quot;</span>, status_code=<span class="number">401</span>)</span><br><span class="line"></span><br><span class="line">router = APIRouter(prefix=<span class="string">&#x27;/test&#x27;</span>, dependencies=[Depends(admin_verify_ticket)])</span><br></pre></td></tr></table></figure>
 
 <p>需要注意的是，配置在路径操作和子路由上的依赖注入函数并不会把返回值传递给API接口，但是可以正常的抛出异常</p>
-<h2 id="对通用参数输入进行处理"><a href="#对通用参数输入进行处理" class="headerlink" title="对通用参数输入进行处理"></a>对通用参数输入进行处理</h2><p>通过使用类作为依赖注入，可以方便的对通用的一些参数进行处理，比如列表页的排序、分页等参数</p>
+<h3 id="对通用参数输入进行处理"><a href="#对通用参数输入进行处理" class="headerlink" title="对通用参数输入进行处理"></a>对通用参数输入进行处理</h3><p>通过使用类作为依赖注入，可以方便的对通用的一些参数进行处理，比如列表页的排序、分页等参数</p>
 <figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> FastAPI</span><br><span class="line"><span class="keyword">from</span> fastapi <span class="keyword">import</span> Depends, Query</span><br><span class="line"></span><br><span class="line">app = FastAPI()</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">CommonQueryParams</span>:</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">self, q: <span class="built_in">int</span> = Query(<span class="params">..., ge=<span class="number">1</span>, le=<span class="number">4</span></span>)</span>):</span></span><br><span class="line">        self.q = q</span><br><span class="line"></span><br><span class="line"><span class="meta">@app.get(<span class="params"><span class="string">&#x27;/&#x27;</span></span>)</span></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">def</span> <span class="title">index</span>(<span class="params">params: CommonQueryParams = Depends(<span class="params"></span>)</span>):</span></span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">&quot;q&quot;</span>: params.q&#125;</span><br></pre></td></tr></table></figure>
 
 <h1 id="sqlalchemy事务和锁"><a href="#sqlalchemy事务和锁" class="headerlink" title="sqlalchemy事务和锁"></a>sqlalchemy事务和锁</h1><p>注意：这里写的使用事务和锁的方法前提是在初始化数据库引擎的时候不要设置<code>AUTOCOMMIT</code></p>
