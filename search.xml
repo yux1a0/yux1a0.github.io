@@ -165,4 +165,32 @@
         <tag>sqlalchemy</tag>
       </tags>
   </entry>
+  <entry>
+    <title>【sqlalchemy】自定义映射表的元类</title>
+    <url>/2022/06/13/%E3%80%90sqlalchemy%E3%80%91%E8%87%AA%E5%AE%9A%E4%B9%89%E6%98%A0%E5%B0%84%E8%A1%A8%E7%9A%84%E5%85%83%E7%B1%BB/</url>
+    <content><![CDATA[<p>sqlalchemy自定义映射表的元类有两种方式：函数<code>declarative_base</code>和<code>as_declarative</code>装饰器</p>
+<span id="more"></span>
+
+<ul>
+<li>通过继承<code>DeclarativeMeta</code>元类，在使用<code>declarative_base</code>函数时传递给<code>metaclss</code>参数</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy <span class="keyword">import</span> Column, Integer, Text, create_engine</span><br><span class="line"><span class="keyword">from</span> sqlalchemy.ext.declarative <span class="keyword">import</span> declarative_base, DeclarativeMeta</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BaseTableMetaclass</span>(<span class="params">DeclarativeMeta</span>):</span></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__init__</span>(<span class="params">cls, classname: <span class="built_in">str</span>, bases, dict_, **kw: <span class="built_in">object</span></span>) -&gt; <span class="literal">None</span>:</span></span><br><span class="line">        <span class="comment"># 自动生成表名的设置</span></span><br><span class="line">        <span class="built_in">setattr</span>(cls, <span class="string">&quot;__tablename__&quot;</span>, classname.lower())</span><br><span class="line">        <span class="comment"># 添加通用的表字段</span></span><br><span class="line">        <span class="built_in">setattr</span>(cls, <span class="string">&quot;id&quot;</span>, Column(Integer, primary_key=<span class="literal">True</span>, autoincrement=<span class="literal">True</span>))</span><br><span class="line">        <span class="built_in">super</span>(BaseTableMetaclass, cls).__init__(classname, bases, dict_, **kw)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Base = declarative_base(metaclass=BaseTableMetaclass)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">TbTest</span>(<span class="params">Base</span>):</span></span><br><span class="line">    status = Column(Integer)</span><br><span class="line">    note = Column(Text)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>定义一个类并使用<code>as_declarative</code>装饰器，使之成为表映射类的元类</li>
+</ul>
+<p>以下是官方文档的示例：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> sqlalchemy.ext.declarative <span class="keyword">import</span> as_declarative</span><br><span class="line"></span><br><span class="line"><span class="meta">@as_declarative()</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Base</span>(<span class="params"><span class="built_in">object</span></span>):</span></span><br><span class="line"><span class="meta">    @declared_attr</span></span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">__tablename__</span>(<span class="params">cls</span>):</span></span><br><span class="line">        <span class="keyword">return</span> cls.__name__.lower()</span><br><span class="line">    <span class="built_in">id</span> = Column(Integer, primary_key=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyMappedClass</span>(<span class="params">Base</span>):</span></span><br><span class="line">    <span class="comment"># ...</span></span><br></pre></td></tr></table></figure>
+
+<p>对比两种方式，<code>as_declarative</code>装饰器的方式更加直观，代码易读性会高一些</p>
+]]></content>
+      <categories>
+        <category>code</category>
+      </categories>
+      <tags>
+        <tag>code</tag>
+        <tag>python</tag>
+        <tag>sqlalchemy</tag>
+      </tags>
+  </entry>
 </search>
